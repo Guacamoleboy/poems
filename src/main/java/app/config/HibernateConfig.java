@@ -1,67 +1,118 @@
 package app.config;
 
+import app.exceptions.ResourceNotFoundException;
 import app.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+import java.util.List;
 import java.util.Properties;
 
-public final class HibernateConfig {
+public class HibernateConfig {
 
     // Attributes
-    private static volatile EntityManagerFactory emf;
+    private static EntityManagerFactory emf;
+    private static EntityManagerFactory emfTest;
+    private static final String RESOURCE_NAME = "config.properties";
 
-    // _____________________________________________________________________________
-    // Singleton
+    // __________________________________________________________
 
-    private HibernateConfig() {}
+    public static void setTest(Boolean test) {
+        HibernateEnvironment.setTest(test);
+    }
 
-    // _____________________________________________________________________________
+    // __________________________________________________________
+
+    public static Boolean getTest() {
+        return HibernateEnvironment.getTest();
+    }
+
+    // __________________________________________________________
 
     public static EntityManagerFactory getEntityManagerFactory() {
-        if (emf == null) {
-            synchronized (HibernateConfig.class) {
-                if (emf == null) {
-                    emf = HibernateEmfBuilder.build(buildProps());
-                }
-            }
-        }
+        if (emf == null)
+            emf = createEMF(getTest());
         return emf;
     }
 
-    // _____________________________________________________________________________
+    // __________________________________________________________
 
-    private static Properties buildProps() {
-        Properties props = HibernateBaseProperties.createBase();
-
-        // Teaching-friendly default - change to update in production
-        props.put("hibernate.hbm2ddl.auto", "create");
-
-        if (System.getenv("DEPLOYED") != null) {
-            setDeployedProperties(props);
-        } else {
-            setDevProperties(props);
+    public static EntityManagerFactory getEntityManagerFactoryForTest() {
+        if (emfTest == null){
+            setTest(true);
+            emfTest = createEMF(getTest());
         }
-        return props;
+        return emfTest;
     }
 
-    // _____________________________________________________________________________
+    // __________________________________________________________
 
-    private static void setDeployedProperties(Properties props) {
-        String dbName = System.getenv("DB_NAME");
-        props.setProperty("hibernate.connection.url", System.getenv("CONNECTION_STR") + dbName);
-        props.setProperty("hibernate.connection.username", System.getenv("DB_USERNAME"));
-        props.setProperty("hibernate.connection.password", System.getenv("DB_PASSWORD"));
-    }
+    private static EntityManagerFactory createEMF(boolean forTest) {
 
-    // _____________________________________________________________________________
+        try {
+            Configuration configuration = new Configuration();
+            Properties props = HibernateProperties.setBaseProperties();
 
-    private static void setDevProperties(Properties props) {
-        String dbName = Utils.getPropertyValue("DB_NAME", "config.properties");
-        String username = Utils.getPropertyValue("DB_USERNAME", "config.properties");
-        String password = Utils.getPropertyValue("DB_PASSWORD", "config.properties");
+            if (forTest) {
+                props = HibernateProperties.setTestProperties(props);
+            } else if (System.getenv("DEPLOYED") != null) {
+                HibernateProperties.setDeployedProperties(props);
+            } else {
 
-        props.put("hibernate.connection.url", "jdbc:postgresql://localhost:5432/" + dbName);
-        props.put("hibernate.connection.username", username);
-        props.put("hibernate.connection.password", password);
+                // Set, Suggest or Exception Handle.
+                try {
+                    props = HibernateProperties.setDevProperties(props, RESOURCE_NAME);
+                } catch (ResourceNotFoundException e) {
+                    List<String> suggestions = Utils.fileMissingSearcher(RESOURCE_NAME);
+                    if (!suggestions.isEmpty()) {
+                        String introMessage = String.format("""
+                                \n---------------------------
+                                HibernateConfig ERROR
+                                    - createEMF(boolean forTest)
+                                    - .properties file not found
+                                
+                                Your search param: 
+                                - %s
+                                
+                                Searching for other .properties files incase of spelling mistake..
+                                _______
+                                
+                                File(s) found:
+                                """, RESOURCE_NAME);
+                        System.out.println(introMessage);
+                        for (String s : suggestions) {
+                            System.out.println("- " +  s);
+                        }
+                        System.out.println("---------------------------\n");
+                        System.exit(0);
+                    } else {
+                        String nothingFound = String.format("""
+                                No file containing ".properties" found.. 
+                                Check your resources/ folder.
+                                """);
+                        System.out.println(nothingFound);
+                        throw e;
+                    }
+                }
+            }
+
+            configuration.setProperties(props);
+            HibernateAnnotation.registerEntities(configuration);
+
+            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+                    .applySettings(configuration.getProperties())
+                    .build();
+
+            SessionFactory sf = configuration.buildSessionFactory(serviceRegistry);
+            return sf.unwrap(EntityManagerFactory.class);
+
+        } catch (Throwable ex) {
+            System.err.println("Initial SessionFactory creation failed." + ex);
+            throw new ExceptionInInitializerError(ex);
+        }
+
     }
 
 }

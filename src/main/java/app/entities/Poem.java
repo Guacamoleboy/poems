@@ -6,9 +6,9 @@ import lombok.*;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @ToString
+@Builder
 public class Poem {
 
     @Id

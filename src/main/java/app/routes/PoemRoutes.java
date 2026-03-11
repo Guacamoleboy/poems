@@ -23,7 +23,7 @@ public class PoemRoutes {
 
     // _________________________________________________________________________________
 
-    public EndpointGroup routes(){
+    public EndpointGroup routes() {
         return () -> path("poems", () -> {
             get("/", poemController::getPoems);
             get("/{id}", poemController::getById);
