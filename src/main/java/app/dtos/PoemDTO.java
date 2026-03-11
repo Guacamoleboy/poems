@@ -1,6 +1,7 @@
 package app.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @AllArgsConstructor
@@ -25,10 +26,16 @@ public class PoemDTO {
     // By: N/A
     // _______________________________________________________
 
+    @JsonProperty("id")
     private Integer id;
+    @JsonProperty("title")
     private String title;
+    @JsonProperty("poem")
     private String poem;
+    @JsonProperty("style")
     private String style;
+
+    // ________________________________________________________________________________________________
 
     public PoemDTO(String title, String poem, String style){
         this.title = title;

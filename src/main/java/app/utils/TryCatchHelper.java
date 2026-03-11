@@ -73,6 +73,7 @@ public class TryCatchHelper {
                     "message", he.getMessage()
             ));
         } catch (Exception e) {
+            e.printStackTrace();
             ctx.status(500).json(Map.of(
                     "status", "error",
                     "message", e.getMessage() != null ? "Debug from TryCatchHelper -> Void: " + e.getMessage() : "Internal Server Error | TryCatchHelper -> Void"

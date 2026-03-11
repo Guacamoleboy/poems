@@ -57,6 +57,7 @@ public class EntityManagerDAO<T> implements IDAO<T> {
             T t = findById(id);
             if (t != null) {
                 em.remove(t);
+                em.flush();
             }
             return t;
         });
