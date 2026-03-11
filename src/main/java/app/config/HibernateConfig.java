@@ -2,14 +2,19 @@ package app.config;
 
 import app.utils.Utils;
 import jakarta.persistence.EntityManagerFactory;
-
 import java.util.Properties;
 
 public final class HibernateConfig {
 
+    // Attributes
     private static volatile EntityManagerFactory emf;
 
+    // _____________________________________________________________________________
+    // Singleton
+
     private HibernateConfig() {}
+
+    // _____________________________________________________________________________
 
     public static EntityManagerFactory getEntityManagerFactory() {
         if (emf == null) {
@@ -21,6 +26,8 @@ public final class HibernateConfig {
         }
         return emf;
     }
+
+    // _____________________________________________________________________________
 
     private static Properties buildProps() {
         Properties props = HibernateBaseProperties.createBase();
@@ -36,12 +43,16 @@ public final class HibernateConfig {
         return props;
     }
 
+    // _____________________________________________________________________________
+
     private static void setDeployedProperties(Properties props) {
         String dbName = System.getenv("DB_NAME");
         props.setProperty("hibernate.connection.url", System.getenv("CONNECTION_STR") + dbName);
         props.setProperty("hibernate.connection.username", System.getenv("DB_USERNAME"));
         props.setProperty("hibernate.connection.password", System.getenv("DB_PASSWORD"));
     }
+
+    // _____________________________________________________________________________
 
     private static void setDevProperties(Properties props) {
         String dbName = Utils.getPropertyValue("DB_NAME", "config.properties");
@@ -52,4 +63,5 @@ public final class HibernateConfig {
         props.put("hibernate.connection.username", username);
         props.put("hibernate.connection.password", password);
     }
+
 }

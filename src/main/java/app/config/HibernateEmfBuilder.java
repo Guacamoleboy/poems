@@ -5,14 +5,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-
 import java.util.Properties;
 
 // This class is just a factory that converts properties into an EntityManagerFactory
-
 final class HibernateEmfBuilder {
 
+    // Attributes
+
+    // _____________________________________________________________________________
+    // Singleton
+
     private HibernateEmfBuilder() {}
+
+    // _____________________________________________________________________________
 
     static EntityManagerFactory build(Properties props) {
         try {
@@ -35,4 +40,5 @@ final class HibernateEmfBuilder {
             throw new ExceptionInInitializerError(ex);
         }
     }
+
 }

@@ -1,22 +1,24 @@
 package app.routes;
 
 import io.javalin.apibuilder.EndpointGroup;
-
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.path;
+import jakarta.persistence.EntityManagerFactory;
 
 public class Routes {
 
-    private final PoemRoutes poemRoutes;
+    // Attributes
 
-    public Routes(PoemRoutes poemRoutes) {
-        this.poemRoutes = poemRoutes;
-    }
+    // _______________________________________________________________________
 
-    public EndpointGroup getRoutes() {
+    public static EndpointGroup registerRoutes(EntityManagerFactory emf) {
+
+        // Routings
+        PoemRoutes poemRoute = new PoemRoutes(emf);
+
+        // EndpointGroup Return to server
         return () -> {
-            get("/", ctx -> ctx.result("Hello World"));
-            path("/poems", poemRoutes.getRoutes());
+            poemRoute.routes().addEndpoints();
         };
+
     }
+
 }
