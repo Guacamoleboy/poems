@@ -10,7 +10,6 @@ Accept: application/json
 DELETE {{url}}/poems/3
 
 ### UPDATE
-
 PUT  {{url}}/poems/1
 
  {
@@ -87,7 +86,3 @@ Accept: application/json
     "style": "Haiku"
   }
 ]
-
-
-
-

@@ -1,92 +1,80 @@
 package app.controllers;
 
-import app.daos.PoemDAO;
 import app.dtos.PoemDTO;
+import app.services.PoemService;
+import app.utils.ContextHelper;
+import app.utils.TryCatchHelper;
 import io.javalin.http.Context;
-import io.javalin.http.HttpStatus;
 import java.util.List;
-import java.util.Map;
 
 public class PoemController {
 
-    private final PoemDAO poemDAO;
+    // Attributes
+    private final PoemService poemService;
 
-    public PoemController(PoemDAO poemDAO){
-        this.poemDAO = poemDAO;
+    // ______________________________________________________________________
+
+    public PoemController(PoemService poemService) {
+        this.poemService = poemService;
     }
 
-    public void getPoems(Context ctx){
-        List<PoemDTO> poemDTOS = poemDAO.getPoems();
-        ctx.status(HttpStatus.OK);
-        ctx.json(poemDTOS);
+    // ______________________________________________________________________  | [GET] - /poems | ______________________
+
+    public void getPoems(Context ctx) {
+        TryCatchHelper.tryCatchHelper(ctx, () ->
+                poemService.getAllPoems(), "Fetched all poems successfully"
+        );
     }
 
-    public void createPoems(Context ctx){
-        // Modtag og konverter en liste af digte (fra json til dto)
-        PoemDTO[] poemDTOS = ctx.bodyAsClass(PoemDTO[].class);
-        // Gem alle digtene i databasen (dao) og modtag en liste af de nye digte
-        List<PoemDTO> newPoemDTOs = poemDAO.createFromList(poemDTOS);
-        ctx.status(HttpStatus.CREATED);
-        ctx.json(newPoemDTOs);
+    // ______________________________________________________________________  | [POST] - /poems | _____________________
+
+    public void createPoems(Context ctx) {
+        TryCatchHelper.tryCatchHelper(ctx, () -> {
+                    PoemDTO[] dtos = ctx.bodyAsClass(PoemDTO[].class);
+                    return poemService.createPoems(List.of(dtos));
+                }, "Poems created successfully"
+        );
     }
 
-    public void createPoem(Context ctx){
-        PoemDTO poemDTO = ctx.bodyAsClass(PoemDTO.class);
-        PoemDTO newPoemDTO = poemDAO.create(poemDTO);
-        ctx.status(HttpStatus.CREATED);
-        ctx.json(newPoemDTO);
+    // ______________________________________________________________________  | [POST] - /poem | ______________________
+
+    public void createPoem(Context ctx) {
+        TryCatchHelper.tryCatchHelper(ctx, () -> {
+                    PoemDTO dto = ctx.bodyAsClass(PoemDTO.class);
+                    return poemService.createPoem(dto);
+                }, "Poem created successfully"
+        );
     }
 
-    public void delete(Context ctx){
-        int id = getId(ctx);
-        boolean deleted = poemDAO.delete(id);
-        if (deleted) {
-            ctx.status(HttpStatus.OK);
-            ctx.json(Map.of(
-                    "message", "Poem deleted",
-                    "id", id
-            ));
-        } else {
-            ctx.status(HttpStatus.NOT_FOUND);
-            ctx.json(Map.of(
-                    "message", "No poem found with id",
-                    "id", id
-            ));
-        }
+    // ______________________________________________________________________  | [DELETE] - /poem/:id | ________________
+
+    public void delete(Context ctx) {
+        TryCatchHelper.tryCatchHelperVoid(ctx, () -> {
+                    int id = ContextHelper.checkPathParamInt(ctx, "id");
+                    poemService.deletePoemById(id);
+                }, "Poem deleted successfully"
+        );
     }
 
-    public void update(Context ctx){
-        int id = getId(ctx);
-        PoemDTO poemDTO = ctx.bodyAsClass(PoemDTO.class);
-        poemDTO = poemDAO.update(id, poemDTO);
-        if (poemDTO != null) {
-            ctx.status(HttpStatus.OK);
-            ctx.json(poemDTO);
-        } else {
-            ctx.status(HttpStatus.NOT_FOUND);
-            ctx.json(Map.of(
-                    "message", "No poem found with id",
-                    "id", id
-            ));
-        }
+    // ______________________________________________________________________  | [PUT] - /poem/:id | ___________________
+
+    public void update(Context ctx) {
+        TryCatchHelper.tryCatchHelper(ctx, () -> {
+                    int id = ContextHelper.checkPathParamInt(ctx, "id");
+                    PoemDTO dto = ctx.bodyAsClass(PoemDTO.class);
+                    return poemService.updatePoem(id, dto);
+                }, "Poem updated successfully"
+        );
     }
 
-    public void getById(Context ctx){
-        int id = getId(ctx);
-        PoemDTO poemDTO = poemDAO.getPoemById(id);
-        if (poemDTO != null) {
-            ctx.status(HttpStatus.OK);
-            ctx.json(poemDTO);
-        } else {
-            ctx.status(HttpStatus.NOT_FOUND);
-            ctx.json(Map.of(
-                    "message", "No poem found with id",
-                    "id", id
-            ));
-        }
+    // ______________________________________________________________________  | [GET] - /poem/:id | ___________________
+
+    public void getById(Context ctx) {
+        TryCatchHelper.tryCatchHelper(ctx, () -> {
+                    int id = ContextHelper.checkPathParamInt(ctx, "id");
+                    return poemService.getPoemById(id);
+                }, "Fetched poem successfully"
+        );
     }
 
-    private int getId(Context ctx) {
-        return ctx.pathParamAsClass("id", Integer.class).get();
-    }
 }

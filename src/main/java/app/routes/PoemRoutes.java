@@ -1,26 +1,37 @@
 package app.routes;
 
 import app.controllers.PoemController;
+import app.services.PoemService;
 import io.javalin.apibuilder.EndpointGroup;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class PoemRoutes {
 
+    // Attributes
+    private final EntityManager entityManager;
     private final PoemController poemController;
 
-    public PoemRoutes(PoemController poemController) {
-        this.poemController = poemController;
+    // _________________________________________________________________________________
+
+    public PoemRoutes(EntityManagerFactory emf) {
+        entityManager = emf.createEntityManager();
+        PoemService poemService = new PoemService(entityManager);
+        poemController = new PoemController(poemService);
     }
 
-    public EndpointGroup getRoutes(){
-        return () -> {
-            get("/", poemController::getPoems );
+    // _________________________________________________________________________________
+
+    public EndpointGroup routes(){
+        return () -> path("poems", () -> {
+            get("/", poemController::getPoems);
             get("/{id}", poemController::getById);
             post("/", poemController::createPoem);
             post("/batch", poemController::createPoems);
-            delete("/{id}", poemController::delete);
             put("/{id}", poemController::update);
-        };
+            delete("/{id}", poemController::delete);
+        });
     }
+
 }

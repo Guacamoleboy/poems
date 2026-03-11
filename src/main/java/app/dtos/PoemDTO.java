@@ -1,33 +1,34 @@
 package app.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import app.entities.Poem;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.List;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PoemDTO {
+
+    // _______________________________________________________
+    // Expected result
+    // _______________
+    //
+    //      {
+    //          "id": 1,
+    //          "title": "Mountain peaks stand tall",
+    //          "poem": "Mountain peaks stand tall, Wrapped in mist and morning sun, Silence in the call.",
+    //          "style": "Haiku"
+    //      }
+    //
+    // _______________
+    // Tested: NO
+    // By: N/A
+    // _______________________________________________________
+
     private Integer id;
     private String title;
     private String poem;
     private String style;
-
-    public PoemDTO(Poem poem){
-        this.id = poem.getId();
-        this.title = poem.getTitle();
-        this.poem = poem.getPoem();
-        this.style = poem.getStyle();
-    }
 
     public PoemDTO(String title, String poem, String style){
         this.title = title;
@@ -35,7 +36,4 @@ public class PoemDTO {
         this.style = style;
     }
 
-    public static List<PoemDTO> toDTOList(List<Poem> poems){
-        return poems.stream().map(PoemDTO::new).toList();
-    }
 }

@@ -4,7 +4,14 @@ import java.util.Properties;
 
 final class HibernateBaseProperties {
 
+    // Attributes
+
+    // _____________________________________________________________________________
+    // Singleton
+
     private HibernateBaseProperties() {}
+
+    // _____________________________________________________________________________
 
     static Properties createBase() {
         Properties props = new Properties();
@@ -17,4 +24,5 @@ final class HibernateBaseProperties {
         props.put("hibernate.hikari.connectionTimeout", "20000");
         return props;
     }
+
 }
